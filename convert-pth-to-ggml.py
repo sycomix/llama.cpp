@@ -145,7 +145,7 @@ def process_and_write_variables(fout, model, ftype, part_id, n_parts):
         data = datao.numpy().squeeze()
         partshape = data.shape
         n_dims = len(data.shape)
-        assert n_dims in (1, 2)
+        assert n_dims in {1, 2}
 
         print(f"Processing variable: {name} with shape: {partshape} and type: {datao.dtype}")
 
@@ -175,18 +175,18 @@ def process_and_write_variables(fout, model, ftype, part_id, n_parts):
         #
         if n_dims > 1:
             split_dim = 1
-            if "tok_embeddings" in name:
+            if (
+                "tok_embeddings" not in name
+                and "layers" in name
+                and (
+                    "attention.wo.weight" in name
+                    or "feed_forward.w2.weight" in name
+                )
+                or "tok_embeddings" in name
+            ):
                 split_dim = 1
-            elif "layers" in name:
-                if "attention.wo.weight" in name:
-                    split_dim = 1
-                elif "feed_forward.w2.weight" in name:
-                    split_dim = 1
-                else:
-                    split_dim = 0
-            elif "output" in name:
+            elif "layers" in name or "output" in name:
                 split_dim = 0
-
         # output tensor header
         fullshape = list(partshape)
         if n_dims > 1:

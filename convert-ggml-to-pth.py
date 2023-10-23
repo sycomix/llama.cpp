@@ -174,16 +174,16 @@ def chat(model, hparams, llama_dir):
                               StoppingCriteriaList)
     from transformers.models.llama.configuration_llama import LlamaConfig
 
+
+
     class StoppingCriteriaSub(StoppingCriteria):
         def __init__(self):
             super().__init__()
 
         def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, stops=[]):
             print(tokenizer.decode(input_ids[0]), end="", flush=True)
-            if input_ids[0][-1] == 13:
-                return True
+            return input_ids[0][-1] == 13
 
-            return False
 
     config = LlamaConfig(
         vocab_size=hparams["vocab_size"],
@@ -208,11 +208,7 @@ AI: Hello! How can I assist you today?
     while True:
         print("-" * 60)
         prompt = input("User: ")
-        if ctx != "":
-            ctx = f"{ctx}User: {prompt}\n"
-        else:
-            ctx = f"{prompt}\nAI:"
-
+        ctx = f"{ctx}User: {prompt}\n" if ctx != "" else f"{prompt}\nAI:"
         ctx = (ctx[-1920:]) if len(ctx) >= 2048 else ctx
 
         print("-" * 60)

@@ -72,17 +72,17 @@ def write_tokens(fout, tokenizer):
     fout.write(struct.pack("f", 0.0))
 
 def read_tokens(f_in, tokenizer):
-    for i in range(tokenizer.vocab_size()):
+    for _ in range(tokenizer.vocab_size()):
         len_b = f_in.read(4)
         (length,) = struct.unpack("i", len_b)
         f_in.read(length)
 
 def copy_all_data(f_out, f_in):
     while True:
-        buf = f_in.read(1024 * 1024)
-        if not buf:
+        if buf := f_in.read(1024 * 1024):
+            f_out.write(buf)
+        else:
             break
-        f_out.write(buf)
 
 def convert_one_file(path_in, tokenizer):
     path_tmp = f"{path_in}.tmp"

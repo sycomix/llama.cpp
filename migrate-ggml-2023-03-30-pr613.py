@@ -116,8 +116,7 @@ def read_hparams(fin):
     struct_size = struct.calcsize(struct_fmt)
     buf = fin.read(struct_size)
     ints = struct.unpack(struct_fmt, buf)
-    hparams = dict(zip(HPARAMS, ints))
-    return hparams
+    return dict(zip(HPARAMS, ints))
 
 def write_hparams(fout, hparams):
     struct_fmt = "i" * len(HPARAMS)
@@ -127,7 +126,7 @@ def write_hparams(fout, hparams):
 
 def read_tokens(fin, hparams):
     tokens = []
-    for i in range(hparams['n_vocab']):
+    for _ in range(hparams['n_vocab']):
         len_b = fin.read(4)
         (length,) = struct.unpack("i", len_b)
         word = fin.read(length)
@@ -199,18 +198,18 @@ def copy_tensors(fin, fout, part_id, n_parts):
         #
         if n_dims > 1:
             split_dim = 1
-            if b"tok_embeddings" in name:
+            if (
+                b"tok_embeddings" not in name
+                and b"layers" in name
+                and (
+                    b"attention.wo.weight" in name
+                    or b"feed_forward.w2.weight" in name
+                )
+                or b"tok_embeddings" in name
+            ):
                 split_dim = 1
-            elif b"layers" in name:
-                if b"attention.wo.weight" in name:
-                    split_dim = 1
-                elif b"feed_forward.w2.weight" in name:
-                    split_dim = 1
-                else:
-                    split_dim = 0
-            elif b"output" in name:
+            elif b"layers" in name or b"output" in name:
                 split_dim = 0
-
         # output tensor header
         fullshape = list(partshape)
         if n_dims > 1:
